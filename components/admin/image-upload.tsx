@@ -2,7 +2,6 @@
 
 import { useRef, useState } from "react";
 import Image from "next/image";
-import { upload } from "@vercel/blob/client";
 import { ImagePlus, Loader2, RefreshCw, X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -14,7 +13,7 @@ interface ImageUploadProps {
   defaultValue?: string;
 }
 
-const MAX_SIZE_IN_BYTES = 5 * 1024 * 1024; // 5 MB
+const MAX_SIZE_IN_BYTES = 4 * 1024 * 1024; // 4 MB (limite seguro na Vercel)
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
 export function ImageUpload({ name, defaultValue = "" }: ImageUploadProps) {
@@ -32,17 +31,31 @@ export function ImageUpload({ name, defaultValue = "" }: ImageUploadProps) {
       return;
     }
     if (file.size > MAX_SIZE_IN_BYTES) {
-      setError("A imagem deve ter no máximo 5 MB.");
+      setError("A imagem deve ter no máximo 4 MB.");
       return;
     }
 
     setIsUploading(true);
     try {
-      const blob = await upload(file.name, file, {
-        access: "public",
-        handleUploadUrl: "/api/upload",
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
       });
-      setUrl(blob.url);
+
+      const data = (await response.json()) as { url?: string; error?: string };
+
+      if (!response.ok) {
+        throw new Error(data.error ?? "Falha no upload. Tente novamente.");
+      }
+
+      if (!data.url) {
+        throw new Error("Resposta inválida do servidor.");
+      }
+
+      setUrl(data.url);
     } catch (uploadError) {
       const message =
         uploadError instanceof Error
@@ -146,7 +159,7 @@ export function ImageUpload({ name, defaultValue = "" }: ImageUploadProps) {
                 Clique para selecionar ou arraste uma imagem
               </p>
               <p className="text-xs text-stone-400">
-                JPG, PNG, WEBP ou GIF · até 5 MB
+                JPG, PNG, WEBP ou GIF · até 4 MB
               </p>
             </>
           )}

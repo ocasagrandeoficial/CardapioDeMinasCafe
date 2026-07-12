@@ -1,60 +1,69 @@
 import { NextResponse } from "next/server";
-import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
+import { put } from "@vercel/blob";
 
 import { auth } from "@/auth";
 
-const ALLOWED_CONTENT_TYPES = [
+const ALLOWED_CONTENT_TYPES = new Set([
   "image/jpeg",
   "image/png",
   "image/webp",
   "image/gif",
-];
+]);
 
-const MAX_SIZE_IN_BYTES = 5 * 1024 * 1024; // 5 MB
+// Limite seguro para Vercel Serverless (body máx. ~4.5 MB).
+const MAX_SIZE_IN_BYTES = 4 * 1024 * 1024;
 
-// Gera o token de upload direto para o Vercel Blob (client upload).
-// O arquivo vai do navegador direto para o Blob, sem passar pelo servidor.
 export async function POST(request: Request): Promise<NextResponse> {
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
     return NextResponse.json(
       {
         error:
-          "Armazenamento de imagens não configurado (BLOB_READ_WRITE_TOKEN ausente).",
+          "Armazenamento não configurado. Adicione BLOB_READ_WRITE_TOKEN nas variáveis da Vercel.",
       },
       { status: 500 }
     );
   }
 
-  const body = (await request.json()) as HandleUploadBody;
+  const session = await auth();
+  if (!session?.user) {
+    return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
+  }
+
+  const formData = await request.formData();
+  const file = formData.get("file");
+
+  if (!(file instanceof File)) {
+    return NextResponse.json(
+      { error: "Nenhum arquivo enviado." },
+      { status: 400 }
+    );
+  }
+
+  if (!ALLOWED_CONTENT_TYPES.has(file.type)) {
+    return NextResponse.json(
+      { error: "Formato inválido. Use JPG, PNG, WEBP ou GIF." },
+      { status: 400 }
+    );
+  }
+
+  if (file.size > MAX_SIZE_IN_BYTES) {
+    return NextResponse.json(
+      { error: "A imagem deve ter no máximo 4 MB." },
+      { status: 400 }
+    );
+  }
 
   try {
-    const jsonResponse = await handleUpload({
-      body,
-      request,
-      onBeforeGenerateToken: async () => {
-        // Só um administrador autenticado pode obter o token de upload.
-        const session = await auth();
-        if (!session?.user) {
-          throw new Error("Não autorizado.");
-        }
-
-        return {
-          allowedContentTypes: ALLOWED_CONTENT_TYPES,
-          maximumSizeInBytes: MAX_SIZE_IN_BYTES,
-          addRandomSuffix: true,
-        };
-      },
-      onUploadCompleted: async () => {
-        // Não é necessário persistir aqui: a URL é salva ao enviar o formulário.
-        // (Este callback só é chamado em produção, quando a URL é pública.)
-      },
+    const blob = await put(file.name, file, {
+      access: "public",
+      addRandomSuffix: true,
     });
 
-    return NextResponse.json(jsonResponse);
+    return NextResponse.json({ url: blob.url });
   } catch (error) {
     return NextResponse.json(
       { error: (error as Error).message },
-      { status: 400 }
+      { status: 500 }
     );
   }
 }
