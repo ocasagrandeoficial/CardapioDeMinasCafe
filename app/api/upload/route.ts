@@ -54,12 +54,19 @@ export async function POST(request: Request): Promise<NextResponse> {
   }
 
   try {
+    // A Blob store está configurada como privada, então enviamos com
+    // access "private". O arquivo não fica acessível pela URL direta;
+    // por isso servimos as imagens através da rota /api/file.
     const blob = await put(file.name, file, {
-      access: "public",
+      access: "private",
       addRandomSuffix: true,
     });
 
-    return NextResponse.json({ url: blob.url });
+    // Guardamos uma URL relativa que aponta para a rota de entrega.
+    // Isso funciona tanto no admin quanto no cardápio público.
+    const url = `/api/file?pathname=${encodeURIComponent(blob.pathname)}`;
+
+    return NextResponse.json({ url });
   } catch (error) {
     return NextResponse.json(
       { error: (error as Error).message },
