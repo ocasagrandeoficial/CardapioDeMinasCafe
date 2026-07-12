@@ -151,6 +151,10 @@ vite.config.ts.timestamp-*
 /out/
 /build
 next-env.d.ts
+.turbo
+
+# Certificados locais (HTTPS em dev)
+*.pem
 
 # Vercel (deploy)
 .vercel
