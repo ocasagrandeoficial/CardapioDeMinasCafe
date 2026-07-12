@@ -43,8 +43,12 @@ export function ImageUpload({ name, defaultValue = "" }: ImageUploadProps) {
         handleUploadUrl: "/api/upload",
       });
       setUrl(blob.url);
-    } catch {
-      setError("Falha no upload. Tente novamente.");
+    } catch (uploadError) {
+      const message =
+        uploadError instanceof Error
+          ? uploadError.message
+          : "Falha no upload. Tente novamente.";
+      setError(message);
     } finally {
       setIsUploading(false);
     }

@@ -15,6 +15,16 @@ const MAX_SIZE_IN_BYTES = 5 * 1024 * 1024; // 5 MB
 // Gera o token de upload direto para o Vercel Blob (client upload).
 // O arquivo vai do navegador direto para o Blob, sem passar pelo servidor.
 export async function POST(request: Request): Promise<NextResponse> {
+  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    return NextResponse.json(
+      {
+        error:
+          "Armazenamento de imagens não configurado (BLOB_READ_WRITE_TOKEN ausente).",
+      },
+      { status: 500 }
+    );
+  }
+
   const body = (await request.json()) as HandleUploadBody;
 
   try {
