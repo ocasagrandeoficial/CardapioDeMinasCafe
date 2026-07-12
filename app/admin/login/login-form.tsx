@@ -8,6 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+// Em desenvolvimento, pré-preenche com as credenciais padrão do .env
+// para facilitar o acesso ao painel. Não aparece em produção.
+const isDev = process.env.NODE_ENV !== "production";
+const devEmail = isDev ? "admin@deminascafe.com" : undefined;
+const devPassword = isDev ? "admin123" : undefined;
+
 export function LoginForm() {
   const [state, formAction, isPending] = useActionState(
     authenticate,
@@ -24,6 +30,7 @@ export function LoginForm() {
           type="email"
           placeholder="admin@deminascafe.com"
           autoComplete="email"
+          defaultValue={devEmail}
           required
         />
       </div>
@@ -36,9 +43,17 @@ export function LoginForm() {
           type="password"
           placeholder="••••••••"
           autoComplete="current-password"
+          defaultValue={devPassword}
           required
         />
       </div>
+
+      {isDev && (
+        <p className="rounded-md bg-stone-100 px-3 py-2 text-xs text-stone-500">
+          <strong className="font-medium text-stone-600">Dev:</strong> use{" "}
+          <code>admin@deminascafe.com</code> / <code>admin123</code>.
+        </p>
+      )}
 
       {state?.error && (
         <div className="flex items-center gap-2 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">

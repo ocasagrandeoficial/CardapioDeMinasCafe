@@ -24,17 +24,25 @@ export const authConfig = {
         password: { label: "Senha", type: "password" },
       },
       authorize: async (credentials) => {
-        const email = credentials?.email as string | undefined;
-        const password = credentials?.password as string | undefined;
+        const rawEmail = credentials?.email as string | undefined;
+        const rawPassword = credentials?.password as string | undefined;
 
         const adminEmail = process.env.ADMIN_EMAIL;
         const adminPassword = process.env.ADMIN_PASSWORD;
 
-        if (!email || !password || !adminEmail || !adminPassword) {
+        if (!rawEmail || !rawPassword || !adminEmail || !adminPassword) {
           return null;
         }
 
-        if (email === adminEmail && password === adminPassword) {
+        // Tolerante a espaços em volta e a maiúsculas no e-mail
+        // (autofill/teclados móveis costumam adicionar variações).
+        const email = rawEmail.trim().toLowerCase();
+        const password = rawPassword.trim();
+
+        const emailMatches = email === adminEmail.trim().toLowerCase();
+        const passwordMatches = password === adminPassword.trim();
+
+        if (emailMatches && passwordMatches) {
           return {
             id: "admin",
             name: "Administrador",
