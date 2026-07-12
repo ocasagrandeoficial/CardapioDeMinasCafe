@@ -34,19 +34,20 @@ Catálogo digital **Mobile-First** para a cafeteria **Dê Minas Café**, com um 
 npm install
 ```
 
-2. Crie o arquivo `.env` (copie de `.env.example`) e ajuste os valores:
+2. Tenha um banco **PostgreSQL** (ex.: [Neon](https://neon.tech) — grátis e sem
+   cartão). Crie o arquivo `.env` (copie de `.env.example`) e ajuste os valores:
 
 ```env
-DATABASE_URL="file:./dev.db"
+DATABASE_URL="postgresql://user:senha@host/dbname?sslmode=require"
 AUTH_SECRET="troque-por-um-segredo-aleatorio"   # gere com: npx auth secret
 ADMIN_EMAIL="admin@deminascafe.com"
 ADMIN_PASSWORD="admin123"
 ```
 
-3. Crie o banco e popule com dados iniciais:
+3. Crie as tabelas e popule com dados iniciais:
 
 ```bash
-npm run db:push   # cria as tabelas no SQLite
+npm run db:push   # cria as tabelas no PostgreSQL
 npm run db:seed   # popula 6 categorias e 24 produtos
 ```
 
@@ -115,19 +116,45 @@ middleware.ts                # protege /admin/*
   `isAvailable`, `categoryId` → relação **1:N** (uma categoria, vários
   produtos; `onDelete: Cascade`).
 
-## Migração para PostgreSQL (Vercel)
+## Deploy na Vercel (passo a passo)
 
-O schema já está pronto para produção. Para migrar:
+1. **Crie um PostgreSQL na nuvem** (ex.: [Neon](https://neon.tech), grátis).
+   Copie duas versões da connection string:
+   - **Direta** (sem `-pooler`) → para migrations/seed a partir do seu PC.
+   - **Pooled** (com `-pooler`) → para o runtime serverless na Vercel.
 
-1. Em `prisma/schema.prisma`, troque `provider = "sqlite"` por
-   `provider = "postgresql"`.
-2. Configure `DATABASE_URL` com a string do Postgres (ex.: Neon/Vercel Postgres).
-3. Rode `npx prisma migrate deploy` (ou `prisma db push`).
+2. **Crie as tabelas e popule** (localmente, usando a URL direta no `.env`):
+
+```bash
+npm run db:push
+npm run db:seed
+```
+
+3. **Suba o projeto para o GitHub** (o `.env` não sobe — está no `.gitignore`).
+
+4. Na **Vercel**, importe o repositório (New Project → seu repo).
+
+5. Em **Settings → Environment Variables**, adicione (para Production e Preview):
+
+   | Variável | Valor |
+   |----------|-------|
+   | `DATABASE_URL` | connection string **pooled** do Postgres |
+   | `AUTH_SECRET` | gere com `npx auth secret` |
+   | `ADMIN_EMAIL` | e-mail de login do painel |
+   | `ADMIN_PASSWORD` | senha de login do painel |
+
+6. Clique em **Deploy**. Ao final, acesse:
+   - Catálogo: `https://SEU-PROJETO.vercel.app`
+   - Painel: `https://SEU-PROJETO.vercel.app/admin` (login com `ADMIN_EMAIL`/`ADMIN_PASSWORD`).
+
+> O build já roda `prisma generate` automaticamente. As tabelas são criadas no
+> passo 2 (uma vez); a Vercel apenas lê/grava no banco já existente.
 
 ## Observações
 
 - As imagens usam URLs do Unsplash/Placehold.co. Domínios liberados em
   `next.config.mjs` (`images.unsplash.com`, `placehold.co`).
-- `.env` e `dev.db` estão no `.gitignore` (não sobem ao GitHub).
+- `.env` está no `.gitignore` (não sobe ao GitHub); configure as variáveis
+  diretamente na Vercel.
 - **Segurança**: para produção, considere trocar a comparação de senha em
   texto puro por um hash (ex.: `bcrypt`) e usar variáveis de ambiente seguras.

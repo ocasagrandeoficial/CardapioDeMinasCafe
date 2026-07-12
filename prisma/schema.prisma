@@ -1,13 +1,13 @@
 // Prisma schema — Dê Minas Café
-// Dev: SQLite. Para produção (Vercel), troque o provider para "postgresql"
-// e ajuste DATABASE_URL. Os models permanecem os mesmos.
+// Banco: PostgreSQL (funciona tanto localmente quanto na Vercel).
+// A conexão vem da variável de ambiente DATABASE_URL.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
