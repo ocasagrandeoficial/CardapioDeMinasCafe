@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { ImageUpload } from "@/components/admin/image-upload";
 import {
   Select,
   SelectContent,
@@ -128,14 +129,8 @@ export function ProductFormSheet({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="imageUrl">URL da Imagem</Label>
-            <Input
-              id="imageUrl"
-              name="imageUrl"
-              type="url"
-              defaultValue={product?.imageUrl}
-              placeholder="https://..."
-            />
+            <Label>Imagem do produto</Label>
+            <ImageUpload name="imageUrl" defaultValue={product?.imageUrl} />
           </div>
 
           <div className="flex items-center justify-between rounded-lg border border-stone-200 p-3">
