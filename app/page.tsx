@@ -69,7 +69,7 @@ export default async function Home() {
                   <span className="h-px flex-1 bg-stone-200" />
                 </div>
 
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 md:gap-6 lg:grid-cols-4">
                   {category.products.map((product) => (
                     <ProductCard key={product.id} product={product} />
                   ))}

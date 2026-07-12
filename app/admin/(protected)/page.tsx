@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Tags, UtensilsCrossed, EyeOff, ArrowRight } from "lucide-react";
 
 import { prisma } from "@/lib/prisma";
+import { formatPrice } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -94,10 +95,7 @@ export default async function DashboardPage() {
                   </p>
                 </div>
                 <span className="text-sm font-semibold text-coffee-700">
-                  {new Intl.NumberFormat("pt-BR", {
-                    style: "currency",
-                    currency: "BRL",
-                  }).format(product.price)}
+                  {formatPrice(product.price)}
                 </span>
               </li>
             ))}

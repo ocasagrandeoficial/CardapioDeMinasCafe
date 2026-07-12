@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
-import { Sidebar } from "@/components/admin/sidebar";
+import { AdminShell } from "@/components/admin/admin-shell";
 
 export default async function AdminProtectedLayout({
   children,
@@ -14,12 +14,5 @@ export default async function AdminProtectedLayout({
     redirect("/admin/login");
   }
 
-  return (
-    <div className="min-h-screen bg-stone-100 text-stone-800">
-      <Sidebar />
-      <div className="pl-64">
-        <main className="mx-auto max-w-6xl p-6 lg:p-10">{children}</main>
-      </div>
-    </div>
-  );
+  return <AdminShell>{children}</AdminShell>;
 }
