@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { Coffee, Menu } from "lucide-react";
 
-import type { Category } from "@/data/menu";
 import { cn } from "@/lib/utils";
 import { useScrollSpy } from "@/hooks/use-scroll-spy";
 import { Button } from "@/components/ui/button";
@@ -16,8 +15,13 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 
+export interface HeaderCategory {
+  id: string;
+  label: string;
+}
+
 interface HeaderProps {
-  categories: Category[];
+  categories: HeaderCategory[];
 }
 
 export function Header({ categories }: HeaderProps) {

@@ -7,8 +7,17 @@
     --background: 60 9% 98%; /* stone-50 */
     --foreground: 24 10% 10%; /* stone-800 */
 
+    --card: 0 0% 100%;
+    --card-foreground: 24 10% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 24 10% 10%;
+
     --primary: 25 43% 33%; /* coffee-600 */
     --primary-foreground: 0 0% 100%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
 
     --secondary: 30 20% 94%;
     --secondary-foreground: 24 10% 10%;

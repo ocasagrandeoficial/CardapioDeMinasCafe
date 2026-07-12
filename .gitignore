@@ -156,6 +156,14 @@ next-env.d.ts
 # Certificados locais (HTTPS em dev)
 *.pem
 
+# Prisma / SQLite — arquivos de banco local (não versionar)
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+prisma/dev.db
+prisma/*.db
+
 # Vercel (deploy)
 .vercel
 

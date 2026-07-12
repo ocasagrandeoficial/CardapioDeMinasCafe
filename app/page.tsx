@@ -1,12 +1,35 @@
-import { menu } from "@/data/menu";
+import { prisma } from "@/lib/prisma";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { ProductCard } from "@/components/ProductCard";
 
-export default function Home() {
+export const dynamic = "force-dynamic";
+
+export default async function Home() {
+  // Busca as categorias com seus produtos disponíveis, direto do banco.
+  const categories = await prisma.category.findMany({
+    orderBy: { order: "asc" },
+    include: {
+      products: {
+        where: { isAvailable: true },
+        orderBy: { title: "asc" },
+      },
+    },
+  });
+
+  // Mantém no menu apenas categorias que tenham ao menos um produto.
+  const visibleCategories = categories.filter(
+    (category) => category.products.length > 0
+  );
+
+  const headerCategories = visibleCategories.map((category) => ({
+    id: category.slug,
+    label: category.name,
+  }));
+
   return (
     <div className="flex min-h-screen flex-col bg-stone-50">
-      <Header categories={menu} />
+      <Header categories={headerCategories} />
 
       <main className="flex-1">
         {/* Hero */}
@@ -28,26 +51,32 @@ export default function Home() {
 
         {/* Seções por categoria */}
         <div className="container py-12">
-          {menu.map((category) => (
-            <section
-              key={category.id}
-              id={category.id}
-              className="scroll-mt-20 py-10"
-            >
-              <div className="mb-6 flex items-center gap-4">
-                <h2 className="font-serif text-3xl font-bold text-stone-800">
-                  {category.label}
-                </h2>
-                <span className="h-px flex-1 bg-stone-200" />
-              </div>
+          {visibleCategories.length === 0 ? (
+            <p className="py-20 text-center text-stone-500">
+              O cardápio está sendo preparado. Volte em breve!
+            </p>
+          ) : (
+            visibleCategories.map((category) => (
+              <section
+                key={category.id}
+                id={category.slug}
+                className="scroll-mt-20 py-10"
+              >
+                <div className="mb-6 flex items-center gap-4">
+                  <h2 className="font-serif text-3xl font-bold text-stone-800">
+                    {category.name}
+                  </h2>
+                  <span className="h-px flex-1 bg-stone-200" />
+                </div>
 
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {category.products.map((product) => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
-              </div>
-            </section>
-          ))}
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {category.products.map((product) => (
+                    <ProductCard key={product.id} product={product} />
+                  ))}
+                </div>
+              </section>
+            ))
+          )}
         </div>
       </main>
 
