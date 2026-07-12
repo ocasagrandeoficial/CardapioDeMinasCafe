@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 60 9% 98%; /* stone-50 */
+    --foreground: 24 10% 10%; /* stone-800 */
+
+    --primary: 25 43% 33%; /* coffee-600 */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 30 20% 94%;
+    --secondary-foreground: 24 10% 10%;
+
+    --muted: 30 12% 92%;
+    --muted-foreground: 25 6% 45%;
+
+    --accent: 30 30% 90%;
+    --accent-foreground: 24 10% 10%;
+
+    --border: 20 6% 90%;
+    --input: 20 6% 90%;
+    --ring: 25 43% 33%;
+
+    --radius: 0.75rem;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-stone-50 text-stone-800;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Compensa a altura do header fixo ao rolar até as seções (scroll spy). */
+  section[id] {
+    scroll-margin-top: 5rem;
+  }
+}
