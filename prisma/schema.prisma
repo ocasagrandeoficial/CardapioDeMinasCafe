@@ -47,6 +47,7 @@ model Order {
   createdAt    DateTime    @default(now())
 
   @@index([createdAt])
+  @@map("orders")
 }
 
 model OrderItem {
@@ -60,4 +61,5 @@ model OrderItem {
 
   @@index([orderId])
   @@index([productId])
+  @@map("order_items")
 }

@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth-guard";
@@ -16,26 +17,51 @@ export type CreateOrderItemInput = {
   quantity: number;
 };
 
+function mergeItems(items: CreateOrderItemInput[]): CreateOrderItemInput[] {
+  const merged = new Map<string, number>();
+
+  for (const item of items) {
+    const quantity = Math.max(1, Math.floor(item.quantity));
+    merged.set(item.productId, (merged.get(item.productId) ?? 0) + quantity);
+  }
+
+  return [...merged.entries()].map(([productId, quantity]) => ({
+    productId,
+    quantity,
+  }));
+}
+
 export async function createOrder(
   customerName: string,
   items: CreateOrderItemInput[]
 ): Promise<OrderActionState> {
-  await requireAdmin();
+  try {
+    await requireAdmin();
+  } catch {
+    return { error: "Sessão expirada. Faça login novamente." };
+  }
 
   const name = customerName.trim();
   if (!name) {
     return { error: "Informe o nome do cliente." };
   }
 
-  if (items.length === 0) {
+  const mergedItems = mergeItems(items);
+  if (mergedItems.length === 0) {
     return { error: "Adicione pelo menos um item à comanda." };
   }
 
-  const productIds = [...new Set(items.map((item) => item.productId))];
+  const productIds = mergedItems.map((item) => item.productId);
 
-  const products = await prisma.product.findMany({
-    where: { id: { in: productIds }, isAvailable: true },
-  });
+  let products;
+  try {
+    products = await prisma.product.findMany({
+      where: { id: { in: productIds }, isAvailable: true },
+    });
+  } catch (error) {
+    console.error("createOrder find products:", error);
+    return { error: "Erro ao consultar produtos. Tente novamente." };
+  }
 
   if (products.length !== productIds.length) {
     return { error: "Um ou mais produtos não estão disponíveis." };
@@ -43,13 +69,11 @@ export async function createOrder(
 
   const productMap = new Map(products.map((product) => [product.id, product]));
 
-  const orderItems = items.map((item) => {
+  const orderItems = mergedItems.map((item) => {
     const product = productMap.get(item.productId)!;
-    const quantity = Math.max(1, Math.floor(item.quantity));
-
     return {
       productId: product.id,
-      quantity,
+      quantity: item.quantity,
       priceAtTime: product.price,
     };
   });
@@ -72,7 +96,19 @@ export async function createOrder(
     revalidatePath("/admin");
 
     return { success: true, orderId: order.id };
-  } catch {
+  } catch (error) {
+    console.error("createOrder:", error);
+
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      (error.code === "P2021" || error.code === "P2022")
+    ) {
+      return {
+        error:
+          "Tabelas de pedidos não encontradas no banco. Aguarde o deploy concluir e tente novamente.",
+      };
+    }
+
     return { error: "Não foi possível finalizar o pedido." };
   }
 }

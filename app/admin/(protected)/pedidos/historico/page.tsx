@@ -27,22 +27,38 @@ interface HistoricoPageProps {
 export default async function HistoricoPedidosPage({
   searchParams,
 }: HistoricoPageProps) {
-  const { period: rawPeriod } = await searchParams;
+  const params = (await searchParams) ?? {};
+  const rawPeriod = params.period;
   const period: OrderPeriod = VALID_PERIODS.has(rawPeriod ?? "")
     ? (rawPeriod as OrderPeriod)
     : "all";
 
   const dateFilter = getOrderDateFilter(period);
 
-  const orders = await prisma.order.findMany({
-    where: dateFilter ? { createdAt: dateFilter } : undefined,
-    orderBy: { createdAt: "desc" },
-    include: {
-      items: {
-        include: { product: true },
+  let orders: Awaited<
+    ReturnType<
+      typeof prisma.order.findMany<{
+        include: { items: { include: { product: true } } };
+      }>
+    >
+  > = [];
+  let loadError: string | null = null;
+
+  try {
+    orders = await prisma.order.findMany({
+      where: dateFilter ? { createdAt: dateFilter } : undefined,
+      orderBy: { createdAt: "desc" },
+      include: {
+        items: {
+          include: { product: true },
+        },
       },
-    },
-  });
+    });
+  } catch (error) {
+    console.error("historico pedidos:", error);
+    loadError =
+      "Não foi possível carregar o histórico. Verifique se o banco de dados está atualizado.";
+  }
 
   return (
     <div className="space-y-6">
@@ -56,6 +72,12 @@ export default async function HistoricoPedidosPage({
       </div>
 
       <OrderPeriodFilter current={period} />
+
+      {loadError && (
+        <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
+          {loadError}
+        </p>
+      )}
 
       <div className="rounded-xl border border-stone-200 bg-white shadow-sm">
         <Table>
