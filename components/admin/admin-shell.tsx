@@ -8,9 +8,11 @@ import {
   ChevronLeft,
   ChevronRight,
   Coffee,
+  History,
   LayoutDashboard,
   LogOut,
   Menu,
+  ShoppingCart,
   Tags,
   UtensilsCrossed,
   X,
@@ -22,6 +24,8 @@ const links = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/admin/categorias", label: "Categorias", icon: Tags },
   { href: "/admin/produtos", label: "Produtos", icon: UtensilsCrossed },
+  { href: "/admin/pedidos/novo", label: "Novo Pedido", icon: ShoppingCart },
+  { href: "/admin/pedidos/historico", label: "Histórico", icon: History },
 ];
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
@@ -148,7 +152,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           collapsed ? "lg:pl-16" : "lg:pl-64"
         )}
       >
-        <main className="mx-auto max-w-6xl p-4 sm:p-6 lg:p-10">{children}</main>
+        <main className="mx-auto max-w-7xl p-4 sm:p-6 lg:p-10">{children}</main>
       </div>
     </div>
   );
