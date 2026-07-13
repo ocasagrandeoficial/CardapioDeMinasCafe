@@ -1,9 +1,11 @@
-import { Coffee, Facebook, Instagram, Twitter } from "lucide-react";
+import { Coffee, Instagram } from "lucide-react";
 
 const socials = [
-  { label: "Instagram", href: "#", Icon: Instagram },
-  { label: "Facebook", href: "#", Icon: Facebook },
-  { label: "Twitter", href: "#", Icon: Twitter },
+  {
+    label: "Instagram",
+    href: "https://www.instagram.com/de.minascafe/",
+    Icon: Instagram,
+  },
 ];
 
 export function Footer() {
@@ -26,6 +28,8 @@ export function Footer() {
             <a
               key={label}
               href={href}
+              target="_blank"
+              rel="noopener noreferrer"
               aria-label={label}
               className="flex h-10 w-10 items-center justify-center rounded-full border border-stone-200 text-stone-600 transition-colors hover:border-coffee-300 hover:bg-coffee-50 hover:text-coffee-700"
             >
