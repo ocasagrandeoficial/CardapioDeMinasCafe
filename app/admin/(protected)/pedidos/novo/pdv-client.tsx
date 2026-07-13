@@ -129,22 +129,9 @@ export function PdvClient({ products }: PdvClientProps) {
   }
 
   return (
-    <div className="space-y-4 lg:space-y-6">
-      {/* Nome do cliente — topo no mobile */}
-      <div className="space-y-2 rounded-xl border border-stone-200 bg-white p-4 shadow-sm lg:hidden">
-        <Label htmlFor="customerNameMobile">Nome do cliente</Label>
-        <Input
-          id="customerNameMobile"
-          placeholder="Ex.: Maria Silva"
-          value={customerName}
-          onChange={(event) => setCustomerName(event.target.value)}
-          disabled={isPending}
-        />
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
+    <div className="flex flex-col gap-6 lg:grid lg:grid-cols-5">
       {/* Catálogo */}
-      <section className="space-y-4 lg:col-span-3">
+      <section className="order-2 space-y-4 lg:order-1 lg:col-span-3">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
           <Input
@@ -196,8 +183,8 @@ export function PdvClient({ products }: PdvClientProps) {
       </section>
 
       {/* Comanda */}
-      <aside className="lg:col-span-2">
-        <div className="sticky top-4 space-y-4 rounded-xl border border-stone-200 bg-white p-4 shadow-sm sm:p-5">
+      <aside className="order-1 lg:order-2 lg:col-span-2">
+        <div className="space-y-4 rounded-xl border border-stone-200 bg-white p-4 shadow-sm sm:p-5 lg:sticky lg:top-4">
           <div className="flex items-center justify-between">
             <h2 className="flex items-center gap-2 text-lg font-semibold text-stone-800">
               <ShoppingCart className="h-5 w-5 text-coffee-600" />
@@ -210,7 +197,7 @@ export function PdvClient({ products }: PdvClientProps) {
             )}
           </div>
 
-          <div className="hidden space-y-2 lg:block">
+          <div className="space-y-2">
             <Label htmlFor="customerName">Nome do cliente</Label>
             <Input
               id="customerName"
@@ -318,7 +305,6 @@ export function PdvClient({ products }: PdvClientProps) {
           </Button>
         </div>
       </aside>
-      </div>
     </div>
   );
 }
