@@ -5,11 +5,13 @@ import { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth-guard";
+import type { KitchenReceiptData } from "@/lib/receipt";
 
 export type OrderActionState = {
   error?: string;
   success?: boolean;
   orderId?: string;
+  receipt?: KitchenReceiptData;
 };
 
 export type CreateOrderItemInput = {
@@ -90,12 +92,27 @@ export async function createOrder(
         totalAmount,
         items: { create: orderItems },
       },
+      include: {
+        items: { include: { product: { select: { title: true } } } },
+      },
     });
 
     revalidatePath("/admin/pedidos/historico");
     revalidatePath("/admin");
 
-    return { success: true, orderId: order.id };
+    const receipt: KitchenReceiptData = {
+      orderId: order.id,
+      customerName: order.customerName,
+      createdAt: order.createdAt.toISOString(),
+      totalAmount: order.totalAmount,
+      items: order.items.map((item) => ({
+        quantity: item.quantity,
+        title: item.product.title,
+        unitPrice: item.priceAtTime,
+      })),
+    };
+
+    return { success: true, orderId: order.id, receipt };
   } catch (error) {
     console.error("createOrder:", error);
 

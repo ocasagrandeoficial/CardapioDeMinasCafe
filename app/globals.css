@@ -49,3 +49,48 @@
     scroll-margin-top: 5rem;
   }
 }
+
+/* Impressão térmica 80mm — comanda de cozinha */
+@media screen {
+  .kitchen-receipt {
+    position: fixed;
+    left: -9999px;
+    top: 0;
+    z-index: -1;
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+@media print {
+  @page {
+    margin: 0;
+    size: 80mm auto;
+  }
+
+  body {
+    margin: 0;
+    background: white;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .kitchen-receipt,
+  .kitchen-receipt * {
+    visibility: visible;
+  }
+
+  .kitchen-receipt {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 80mm;
+    opacity: 1;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+}

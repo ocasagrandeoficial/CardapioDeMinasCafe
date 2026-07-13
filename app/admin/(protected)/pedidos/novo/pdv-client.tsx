@@ -10,10 +10,13 @@ import {
   Search,
   ShoppingCart,
   Trash2,
+  X,
 } from "lucide-react";
 
 import { createOrder } from "@/app/admin/pedidos/actions";
 import { formatPrice } from "@/lib/format";
+import { canPrintOnCashierPc } from "@/lib/print";
+import { useReceiptPrint } from "@/hooks/use-receipt-print";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,7 +47,9 @@ export function PdvClient({ products }: PdvClientProps) {
   const [cart, setCart] = useState<CartLine[]>([]);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showPrintHint, setShowPrintHint] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const { printReceipt, ReceiptLayer } = useReceiptPrint();
 
   const filteredProducts = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -122,14 +127,26 @@ export function PdvClient({ products }: PdvClientProps) {
         return;
       }
 
+      if (result.receipt && canPrintOnCashierPc()) {
+        printReceipt(result.receipt);
+        setShowPrintHint(true);
+        setSuccessMessage("Pedido finalizado! Imprimindo comanda...");
+      } else {
+        setSuccessMessage(
+          "Pedido salvo! Para imprimir na Epson, finalize no PC do caixa."
+        );
+      }
+
       setCart([]);
       setCustomerName("");
-      setSuccessMessage("Pedido finalizado com sucesso!");
     });
   }
 
   return (
-    <div className="flex flex-col gap-6 lg:grid lg:grid-cols-5">
+    <>
+      {ReceiptLayer}
+
+      <div className="flex flex-col gap-6 lg:grid lg:grid-cols-5">
       {/* Catálogo */}
       <section className="order-2 space-y-4 lg:order-1 lg:col-span-3">
         <div className="relative">
@@ -206,12 +223,41 @@ export function PdvClient({ products }: PdvClientProps) {
               onChange={(event) => setCustomerName(event.target.value)}
               disabled={isPending}
             />
+            <p className="text-xs text-stone-400 lg:hidden">
+              No celular o pedido é salvo no sistema. A impressão na Epson é
+              feita no PC do caixa.
+            </p>
           </div>
 
           {successMessage && (
             <div className="flex items-center gap-2 rounded-lg bg-green-50 px-3 py-2 text-sm text-green-700">
               <CheckCircle2 className="h-4 w-4 shrink-0" />
               {successMessage}
+            </div>
+          )}
+
+          {showPrintHint && canPrintOnCashierPc() && (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="font-semibold">Impressão silenciosa (Chrome)</p>
+                  <p className="mt-1">
+                    Configure o atalho do Chrome com a flag{" "}
+                    <code className="rounded bg-amber-100 px-1">
+                      --kiosk-printing
+                    </code>{" "}
+                    para imprimir direto na Epson USB, sem diálogo.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowPrintHint(false)}
+                  aria-label="Fechar dica"
+                  className="shrink-0 rounded p-0.5 text-amber-700 hover:bg-amber-100"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
             </div>
           )}
 
@@ -305,6 +351,7 @@ export function PdvClient({ products }: PdvClientProps) {
           </Button>
         </div>
       </aside>
-    </div>
+      </div>
+    </>
   );
 }
