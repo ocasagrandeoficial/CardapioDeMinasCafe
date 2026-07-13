@@ -1,3 +1,5 @@
+import { getBrasiliaStartOfDay, subtractDays } from "@/lib/timezone";
+
 export type OrderPeriod = "today" | "week" | "month" | "all";
 
 export const ORDER_PERIODS: { value: OrderPeriod; label: string }[] = [
@@ -7,24 +9,17 @@ export const ORDER_PERIODS: { value: OrderPeriod; label: string }[] = [
   { value: "all", label: "Todo o período" },
 ];
 
-/** Retorna o filtro Prisma `createdAt` conforme o período selecionado. */
+/** Retorna o filtro Prisma `createdAt` conforme o período (fuso de Brasília). */
 export function getOrderDateFilter(period: string): { gte: Date } | undefined {
-  const startOfToday = new Date();
-  startOfToday.setHours(0, 0, 0, 0);
+  const startOfToday = getBrasiliaStartOfDay();
 
   switch (period as OrderPeriod) {
     case "today":
       return { gte: startOfToday };
-    case "week": {
-      const from = new Date(startOfToday);
-      from.setDate(from.getDate() - 7);
-      return { gte: from };
-    }
-    case "month": {
-      const from = new Date(startOfToday);
-      from.setDate(from.getDate() - 30);
-      return { gte: from };
-    }
+    case "week":
+      return { gte: subtractDays(startOfToday, 7) };
+    case "month":
+      return { gte: subtractDays(startOfToday, 30) };
     default:
       return undefined;
   }
