@@ -10,8 +10,8 @@ export default function PedidosPage() {
           Pedidos
         </h1>
         <p className="mt-1 text-stone-500">
-          Pedidos pendentes chegam aqui em tempo real. Imprima para enviar à
-          cozinha e concluir.
+          Pedidos pendentes chegam e são impressos automaticamente. Clique em
+          Concluir quando o preparo terminar.
         </p>
       </div>
 
