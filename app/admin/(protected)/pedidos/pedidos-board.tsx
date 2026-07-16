@@ -1,7 +1,17 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
-import { Check, Clock, Loader2, Printer, User, UtensilsCrossed } from "lucide-react";
+import {
+  Check,
+  Clock,
+  Loader2,
+  Play,
+  Printer,
+  TriangleAlert,
+  User,
+  UtensilsCrossed,
+  X,
+} from "lucide-react";
 
 import { completeOrder } from "@/app/admin/pedidos/actions";
 import { usePendingOrders } from "@/hooks/use-pending-orders";
@@ -29,10 +39,7 @@ function loadPrintedIds(): Set<string> {
 
 function persistPrintedIds(ids: Set<string>) {
   try {
-    window.localStorage.setItem(
-      PRINTED_STORAGE_KEY,
-      JSON.stringify([...ids])
-    );
+    window.localStorage.setItem(PRINTED_STORAGE_KEY, JSON.stringify([...ids]));
   } catch {
     // localStorage indisponível: seguimos apenas em memória.
   }
@@ -53,11 +60,16 @@ function formatWaitTime(createdAtISO: string, now: number): string {
 }
 
 export function PedidosBoard() {
-  const { orders, isLoading, refresh } = usePendingOrders();
+  // Trava de interação: o polling e a auto-impressão só rodam após o
+  // atendente clicar no botão (gesto de usuário exigido pelo navegador).
+  const [isAutoPrintEnabled, setIsAutoPrintEnabled] = useState(false);
+
+  const { orders, isLoading, refresh } = usePendingOrders(isAutoPrintEnabled);
 
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
   const [completingId, setCompletingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const [, startTransition] = useTransition();
 
@@ -81,6 +93,13 @@ export function PedidosBoard() {
     return () => window.clearInterval(id);
   }, []);
 
+  // Toast some sozinho após alguns segundos.
+  useEffect(() => {
+    if (!toast) return;
+    const id = window.setTimeout(() => setToast(null), 6000);
+    return () => window.clearTimeout(id);
+  }, [toast]);
+
   const processQueue = useCallback(() => {
     if (isPrintingRef.current) return;
     const next = queueRef.current.shift();
@@ -92,7 +111,7 @@ export function PedidosBoard() {
 
   // Detecta novos pedidos vindos do polling e os enfileira para impressão.
   useEffect(() => {
-    if (!canAutoPrint) return;
+    if (!isAutoPrintEnabled || !canAutoPrint) return;
 
     const newOrders = orders.filter(
       (order) => !printedIdsRef.current.has(order.id)
@@ -114,7 +133,7 @@ export function PedidosBoard() {
 
     persistPrintedIds(printedIdsRef.current);
     processQueue();
-  }, [orders, canAutoPrint, processQueue]);
+  }, [orders, isAutoPrintEnabled, canAutoPrint, processQueue]);
 
   // Dispara a impressão do recibo atual após o DOM térmico renderizar.
   useEffect(() => {
@@ -126,7 +145,22 @@ export function PedidosBoard() {
     //   chrome.exe --kiosk-printing "https://seu-dominio/admin/pedidos"
     // A impressora Epson precisa estar definida como padrão no Windows.
     const printTimer = window.setTimeout(() => {
-      window.print();
+      try {
+        window.print();
+      } catch {
+        // Bloqueio de popup/impressão: destravamos a trava de interação para
+        // que o atendente reative com um novo clique (novo gesto de usuário).
+        const blockedId = receiptToPrint.orderId;
+        printedIdsRef.current.delete(blockedId);
+        persistPrintedIds(printedIdsRef.current);
+        queueRef.current = [];
+        isPrintingRef.current = false;
+        setReceiptToPrint(null);
+        setIsAutoPrintEnabled(false);
+        setToast(
+          "A impressão automática foi bloqueada pelo navegador. Clique na tela para reativar."
+        );
+      }
     }, RENDER_DELAY_MS);
 
     // Fallback: se o evento `afterprint` não disparar (comum no modo kiosk),
@@ -155,6 +189,14 @@ export function PedidosBoard() {
     return () => window.removeEventListener("afterprint", onAfterPrint);
   }, [processQueue]);
 
+  function handleEnable() {
+    // Este clique é o "User Gesture" exigido pelo navegador. A partir dele, os
+    // disparos automáticos de window.print() na aba ativa deixam de ser
+    // bloqueados pela política anti-popup do Chrome.
+    setToast(null);
+    setIsAutoPrintEnabled(true);
+  }
+
   const visibleOrders = orders.filter((order) => !hiddenIds.has(order.id));
 
   function handleComplete(orderId: string) {
@@ -182,8 +224,65 @@ export function PedidosBoard() {
     });
   }
 
+  const Toast = toast ? (
+    <div className="fixed bottom-4 right-4 z-[60] flex max-w-sm items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 shadow-lg">
+      <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" />
+      <span className="flex-1">{toast}</span>
+      <button
+        type="button"
+        onClick={() => setToast(null)}
+        aria-label="Fechar aviso"
+        className="shrink-0 rounded p-0.5 text-red-600 hover:bg-red-100"
+      >
+        <X className="h-4 w-4" />
+      </button>
+    </div>
+  ) : null;
+
+  // Estado ocioso: enquanto a recepção não é ativada, escondemos a lista e
+  // exibimos a chamada para o clique inicial (que libera a impressão).
+  if (!isAutoPrintEnabled) {
+    return (
+      <>
+        {Toast}
+        <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-dashed border-stone-300 bg-white py-16 text-center">
+          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-coffee-100 text-coffee-700">
+            <Printer className="h-7 w-7" />
+          </span>
+          <div>
+            <p className="text-lg font-semibold text-stone-800">
+              Recepção de pedidos pausada
+            </p>
+            <p className="mx-auto mt-1 max-w-md text-sm text-stone-500">
+              Ative para começar a receber e imprimir os pedidos
+              automaticamente. Este clique é necessário para o navegador liberar
+              a impressão sem bloqueios.
+            </p>
+          </div>
+          <Button
+            type="button"
+            onClick={handleEnable}
+            size="lg"
+            className="bg-coffee-600 text-base text-white hover:bg-coffee-700"
+          >
+            <Play className="h-5 w-5" />
+            Iniciar Recepção de Pedidos
+          </Button>
+          {!canAutoPrint && (
+            <p className="max-w-md text-xs text-amber-600">
+              Neste dispositivo a impressão não está disponível. Use o PC do
+              caixa (com a Epson definida como impressora padrão).
+            </p>
+          )}
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
+      {Toast}
+
       {/* Camada oculta usada apenas pelo @media print (recibo térmico 80mm). */}
       {receiptToPrint && (
         <div className="kitchen-receipt" aria-hidden="true">
@@ -191,18 +290,23 @@ export function PedidosBoard() {
         </div>
       )}
 
-      <div className="flex items-center gap-2 rounded-lg border border-stone-200 bg-white px-3 py-2 text-xs text-stone-500">
-        <Printer className="h-4 w-4 shrink-0 text-coffee-600" />
-        {canAutoPrint ? (
-          <span>
-            Impressão automática ativa. Novos pedidos são impressos ao chegar.
+      <div className="flex items-center justify-between gap-3 rounded-lg border border-stone-200 bg-white px-3 py-2 text-xs text-stone-500">
+        <span className="flex items-center gap-2">
+          <span className="relative flex h-2.5 w-2.5">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
+            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-green-500" />
           </span>
-        ) : (
-          <span>
-            Neste dispositivo a impressão não está disponível. A impressão
-            automática funciona no PC do caixa (com a Epson padrão).
-          </span>
-        )}
+          {canAutoPrint
+            ? "Recepção ativa. Novos pedidos são impressos automaticamente."
+            : "Recepção ativa. Impressão indisponível neste dispositivo."}
+        </span>
+        <button
+          type="button"
+          onClick={() => setIsAutoPrintEnabled(false)}
+          className="shrink-0 rounded px-2 py-1 font-medium text-stone-500 hover:bg-stone-100"
+        >
+          Pausar
+        </button>
       </div>
 
       {error && (

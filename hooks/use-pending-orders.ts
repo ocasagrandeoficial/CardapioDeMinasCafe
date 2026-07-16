@@ -23,8 +23,9 @@ type PendingResponse = {
 /**
  * Short-polling dos pedidos pendentes (sem WebSockets).
  * Consulta o endpoint a cada `intervalMs` e quando a aba volta ao foco.
+ * Quando `enabled` é `false`, nenhuma requisição é feita.
  */
-export function usePendingOrders(intervalMs = 5000) {
+export function usePendingOrders(enabled = true, intervalMs = 5000) {
   const [orders, setOrders] = useState<PendingOrder[]>([]);
   const [count, setCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -47,6 +48,8 @@ export function usePendingOrders(intervalMs = 5000) {
   }, []);
 
   useEffect(() => {
+    if (!enabled) return;
+
     refresh();
     const id = window.setInterval(refresh, intervalMs);
 
@@ -59,7 +62,7 @@ export function usePendingOrders(intervalMs = 5000) {
       window.clearInterval(id);
       document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, [refresh, intervalMs]);
+  }, [enabled, refresh, intervalMs]);
 
   return { orders, count, isLoading, refresh };
 }
