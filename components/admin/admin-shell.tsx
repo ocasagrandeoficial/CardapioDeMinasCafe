@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import {
+  Calculator,
   ChevronLeft,
   ChevronRight,
   ClipboardList,
@@ -26,6 +27,7 @@ const links = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/admin/categorias", label: "Categorias", icon: Tags },
   { href: "/admin/produtos", label: "Produtos", icon: UtensilsCrossed },
+  { href: "/admin/ficha-tecnica", label: "Ficha Técnica", icon: Calculator },
   { href: "/admin/pedidos/novo", label: "Novo Pedido", icon: ShoppingCart },
   {
     href: "/admin/pedidos",
