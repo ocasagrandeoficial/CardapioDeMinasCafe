@@ -88,6 +88,7 @@ export async function createOrder(
       productId: product.id,
       quantity: item.quantity,
       priceAtTime: product.price,
+      costAtTime: product.costPrice,
     };
   });
 

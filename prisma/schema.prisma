@@ -29,6 +29,7 @@ model Product {
   description String
   imageUrl    String
   price       Float
+  costPrice   Float       @default(0)
   isAvailable Boolean     @default(true)
   categoryId  String
   category    Category    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
@@ -61,6 +62,7 @@ model OrderItem {
   product     Product @relation(fields: [productId], references: [id], onDelete: Restrict)
   quantity    Int
   priceAtTime Float
+  costAtTime  Float   @default(0)
 
   @@index([orderId])
   @@index([productId])

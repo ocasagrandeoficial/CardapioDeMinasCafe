@@ -12,6 +12,7 @@ export type ProductActionState = {
 
 function revalidateAll() {
   revalidatePath("/admin/produtos");
+  revalidatePath("/admin");
   revalidatePath("/");
 }
 
@@ -34,12 +35,16 @@ export async function createProduct(
   const imageUrl = String(formData.get("imageUrl") ?? "").trim();
   const categoryId = String(formData.get("categoryId") ?? "");
   const price = parsePrice(formData.get("price"));
+  const costPrice = parsePrice(formData.get("costPrice"));
   const isAvailable = formData.get("isAvailable") === "on";
 
   if (!title) return { error: "Informe o título do produto." };
   if (!categoryId) return { error: "Selecione uma categoria." };
   if (!Number.isFinite(price) || price < 0) {
     return { error: "Informe um preço válido." };
+  }
+  if (!Number.isFinite(costPrice) || costPrice < 0) {
+    return { error: "Informe um custo válido." };
   }
 
   try {
@@ -51,6 +56,7 @@ export async function createProduct(
           imageUrl ||
           "https://placehold.co/800x450/78522e/ffffff?text=D%C3%AA+Minas",
         price,
+        costPrice,
         isAvailable,
         categoryId,
       },
@@ -75,6 +81,7 @@ export async function updateProduct(
   const imageUrl = String(formData.get("imageUrl") ?? "").trim();
   const categoryId = String(formData.get("categoryId") ?? "");
   const price = parsePrice(formData.get("price"));
+  const costPrice = parsePrice(formData.get("costPrice"));
   const isAvailable = formData.get("isAvailable") === "on";
 
   if (!id) return { error: "Produto inválido." };
@@ -82,6 +89,9 @@ export async function updateProduct(
   if (!categoryId) return { error: "Selecione uma categoria." };
   if (!Number.isFinite(price) || price < 0) {
     return { error: "Informe um preço válido." };
+  }
+  if (!Number.isFinite(costPrice) || costPrice < 0) {
+    return { error: "Informe um custo válido." };
   }
 
   try {
@@ -94,6 +104,7 @@ export async function updateProduct(
           imageUrl ||
           "https://placehold.co/800x450/78522e/ffffff?text=D%C3%AA+Minas",
         price,
+        costPrice,
         isAvailable,
         categoryId,
       },

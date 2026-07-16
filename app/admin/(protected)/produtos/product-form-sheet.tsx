@@ -97,7 +97,7 @@ export function ProductFormSheet({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="price">Preço (R$)</Label>
+              <Label htmlFor="price">Preço de venda (R$)</Label>
               <Input
                 id="price"
                 name="price"
@@ -109,23 +109,34 @@ export function ProductFormSheet({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="categoryId">Categoria</Label>
-              <Select
-                name="categoryId"
-                defaultValue={product?.categoryId ?? categories[0]?.id}
-              >
-                <SelectTrigger id="categoryId">
-                  <SelectValue placeholder="Selecione..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="costPrice">Custo (R$)</Label>
+              <Input
+                id="costPrice"
+                name="costPrice"
+                inputMode="decimal"
+                defaultValue={product?.costPrice?.toString() ?? "0"}
+                placeholder="0,00"
+              />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="categoryId">Categoria</Label>
+            <Select
+              name="categoryId"
+              defaultValue={product?.categoryId ?? categories[0]?.id}
+            >
+              <SelectTrigger id="categoryId">
+                <SelectValue placeholder="Selecione..." />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((category) => (
+                  <SelectItem key={category.id} value={category.id}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
