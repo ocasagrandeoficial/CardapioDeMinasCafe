@@ -42,11 +42,14 @@ model Product {
 model Order {
   id           String      @id @default(cuid())
   customerName String
+  waiterName   String?
+  status       String      @default("PENDING") // PENDING | COMPLETED
   totalAmount  Float
   items        OrderItem[]
   createdAt    DateTime    @default(now())
 
   @@index([createdAt])
+  @@index([status])
   @@map("orders")
 }
 

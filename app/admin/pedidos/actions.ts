@@ -5,18 +5,22 @@ import { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth-guard";
-import type { KitchenReceiptData } from "@/lib/receipt";
 
 export type OrderActionState = {
   error?: string;
   success?: boolean;
   orderId?: string;
-  receipt?: KitchenReceiptData;
 };
 
 export type CreateOrderItemInput = {
   productId: string;
   quantity: number;
+};
+
+export type CreateOrderInput = {
+  customerName: string;
+  waiterName?: string;
+  items: CreateOrderItemInput[];
 };
 
 function mergeItems(items: CreateOrderItemInput[]): CreateOrderItemInput[] {
@@ -33,9 +37,14 @@ function mergeItems(items: CreateOrderItemInput[]): CreateOrderItemInput[] {
   }));
 }
 
+function revalidateOrders() {
+  revalidatePath("/admin/pedidos");
+  revalidatePath("/admin/pedidos/historico");
+  revalidatePath("/admin");
+}
+
 export async function createOrder(
-  customerName: string,
-  items: CreateOrderItemInput[]
+  input: CreateOrderInput
 ): Promise<OrderActionState> {
   try {
     await requireAdmin();
@@ -43,12 +52,14 @@ export async function createOrder(
     return { error: "Sessão expirada. Faça login novamente." };
   }
 
-  const name = customerName.trim();
+  const name = input.customerName.trim();
   if (!name) {
     return { error: "Informe o nome do cliente." };
   }
 
-  const mergedItems = mergeItems(items);
+  const waiterName = input.waiterName?.trim() || null;
+
+  const mergedItems = mergeItems(input.items);
   if (mergedItems.length === 0) {
     return { error: "Adicione pelo menos um item à comanda." };
   }
@@ -89,30 +100,16 @@ export async function createOrder(
     const order = await prisma.order.create({
       data: {
         customerName: name,
+        waiterName,
+        status: "PENDING",
         totalAmount,
         items: { create: orderItems },
       },
-      include: {
-        items: { include: { product: { select: { title: true } } } },
-      },
     });
 
-    revalidatePath("/admin/pedidos/historico");
-    revalidatePath("/admin");
+    revalidateOrders();
 
-    const receipt: KitchenReceiptData = {
-      orderId: order.id,
-      customerName: order.customerName,
-      createdAt: order.createdAt.toISOString(),
-      totalAmount: order.totalAmount,
-      items: order.items.map((item) => ({
-        quantity: item.quantity,
-        title: item.product.title,
-        unitPrice: item.priceAtTime,
-      })),
-    };
-
-    return { success: true, orderId: order.id, receipt };
+    return { success: true, orderId: order.id };
   } catch (error) {
     console.error("createOrder:", error);
 
@@ -126,6 +123,33 @@ export async function createOrder(
       };
     }
 
-    return { error: "Não foi possível finalizar o pedido." };
+    return { error: "Não foi possível enviar o pedido." };
+  }
+}
+
+/** Marca o pedido como impresso/concluído e o move para o histórico. */
+export async function completeOrder(orderId: string): Promise<OrderActionState> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { error: "Sessão expirada. Faça login novamente." };
+  }
+
+  if (!orderId) {
+    return { error: "Pedido inválido." };
+  }
+
+  try {
+    await prisma.order.update({
+      where: { id: orderId },
+      data: { status: "COMPLETED" },
+    });
+
+    revalidateOrders();
+
+    return { success: true, orderId };
+  } catch (error) {
+    console.error("completeOrder:", error);
+    return { error: "Não foi possível concluir o pedido." };
   }
 }

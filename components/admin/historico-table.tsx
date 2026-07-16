@@ -19,6 +19,7 @@ import {
 export type HistoricoOrderRow = {
   id: string;
   customerName: string;
+  waiterName?: string | null;
   createdAt: string;
   totalAmount: number;
   items: {

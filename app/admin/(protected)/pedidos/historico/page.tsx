@@ -36,7 +36,10 @@ export default async function HistoricoPedidosPage({
 
   try {
     orders = await prisma.order.findMany({
-      where: dateFilter ? { createdAt: dateFilter } : undefined,
+      where: {
+        status: "COMPLETED",
+        ...(dateFilter ? { createdAt: dateFilter } : {}),
+      },
       orderBy: { createdAt: "desc" },
       include: {
         items: {
@@ -53,6 +56,7 @@ export default async function HistoricoPedidosPage({
   const serializedOrders = orders.map((order) => ({
     id: order.id,
     customerName: order.customerName,
+    waiterName: order.waiterName,
     createdAt: order.createdAt.toISOString(),
     totalAmount: order.totalAmount,
     items: order.items.map((item) => ({

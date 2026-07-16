@@ -26,6 +26,11 @@ export function KitchenReceipt({ data }: KitchenReceiptProps) {
       <p>
         <span className="font-bold">Cliente:</span> {data.customerName}
       </p>
+      {data.waiterName && (
+        <p>
+          <span className="font-bold">Garçom/Mesa:</span> {data.waiterName}
+        </p>
+      )}
       <p>
         <span className="font-bold">Data:</span> {formatDateTime(createdAt)}
       </p>

@@ -7,6 +7,7 @@ import { signOut } from "next-auth/react";
 import {
   ChevronLeft,
   ChevronRight,
+  ClipboardList,
   Coffee,
   History,
   LayoutDashboard,
@@ -19,12 +20,20 @@ import {
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { PendingOrdersBadge } from "@/components/admin/pending-orders-badge";
 
 const links = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/admin/categorias", label: "Categorias", icon: Tags },
   { href: "/admin/produtos", label: "Produtos", icon: UtensilsCrossed },
   { href: "/admin/pedidos/novo", label: "Novo Pedido", icon: ShoppingCart },
+  {
+    href: "/admin/pedidos",
+    label: "Pedidos",
+    icon: ClipboardList,
+    exact: true,
+    badge: true,
+  },
   { href: "/admin/pedidos/historico", label: "Histórico", icon: History },
 ];
 
@@ -50,7 +59,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         </button>
         <span className="flex items-center gap-2 font-serif text-lg font-semibold">
           <Coffee className="h-5 w-5 text-coffee-600" />
-          Dê Minas
+          Dê Minas Café
         </span>
       </header>
 
@@ -80,7 +89,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             )}
           >
             <Coffee className="h-6 w-6 shrink-0 text-coffee-300" />
-            <span className="font-serif text-lg font-semibold">Dê Minas</span>
+            <span className="font-serif text-lg font-semibold">Dê Minas Café</span>
           </span>
 
           {/* Toggle de colapsar (desktop) */}
@@ -109,14 +118,14 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         </div>
 
         <nav className="flex-1 space-y-1 p-3">
-          {links.map(({ href, label, icon: Icon, exact }) => (
+          {links.map(({ href, label, icon: Icon, exact, badge }) => (
             <Link
               key={href}
               href={href}
               onClick={() => setMobileOpen(false)}
               title={collapsed ? label : undefined}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                "relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                 isActive(href, exact)
                   ? "bg-coffee-600 text-white"
                   : "text-stone-300 hover:bg-stone-800 hover:text-white",
@@ -125,6 +134,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             >
               <Icon className="h-5 w-5 shrink-0" />
               <span className={cn(collapsed && "lg:hidden")}>{label}</span>
+              {badge && <PendingOrdersBadge collapsed={collapsed} />}
             </Link>
           ))}
         </nav>

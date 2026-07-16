@@ -7,6 +7,7 @@ export type KitchenReceiptItem = {
 export type KitchenReceiptData = {
   orderId: string;
   customerName: string;
+  waiterName?: string | null;
   createdAt: string;
   totalAmount: number;
   items: KitchenReceiptItem[];
@@ -15,6 +16,7 @@ export type KitchenReceiptData = {
 type OrderForReceipt = {
   id: string;
   customerName: string;
+  waiterName?: string | null;
   createdAt: Date;
   totalAmount: number;
   items: {
@@ -28,6 +30,7 @@ export function toKitchenReceiptData(order: OrderForReceipt): KitchenReceiptData
   return {
     orderId: order.id,
     customerName: order.customerName,
+    waiterName: order.waiterName ?? null,
     createdAt: order.createdAt.toISOString(),
     totalAmount: order.totalAmount,
     items: order.items.map(
