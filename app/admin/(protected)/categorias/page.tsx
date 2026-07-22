@@ -19,7 +19,11 @@ export const dynamic = "force-dynamic";
 export default async function CategoriasPage() {
   const categories = await prisma.category.findMany({
     orderBy: { order: "asc" },
-    include: { _count: { select: { products: true } } },
+    include: {
+      _count: {
+        select: { products: { where: { deletedAt: null } } },
+      },
+    },
   });
 
   return (
@@ -98,7 +102,7 @@ export default async function CategoriasPage() {
                       />
                       <DeleteConfirmDialog
                         title="Excluir categoria"
-                        description={`Tem certeza que deseja excluir "${category.name}"? Todos os produtos dessa categoria também serão removidos.`}
+                        description={`Tem certeza que deseja excluir "${category.name}"? Os produtos dessa categoria ficam sem categoria (não são apagados).`}
                         onConfirm={deleteCategory.bind(null, category.id)}
                       />
                     </div>

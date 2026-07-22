@@ -26,9 +26,20 @@ type OrderForReceipt = {
   items: {
     quantity: number;
     priceAtTime: number;
-    product: { title: string };
+    productTitle?: string | null;
+    product?: { title: string } | null;
   }[];
 };
+
+/** Título estável do item: snapshot da venda, com fallback para o produto. */
+export function resolveItemTitle(item: {
+  productTitle?: string | null;
+  product?: { title: string } | null;
+}): string {
+  const snapshot = item.productTitle?.trim();
+  if (snapshot) return snapshot;
+  return item.product?.title?.trim() || "Produto removido";
+}
 
 export function toKitchenReceiptData(order: OrderForReceipt): KitchenReceiptData {
   return {
@@ -43,7 +54,7 @@ export function toKitchenReceiptData(order: OrderForReceipt): KitchenReceiptData
     items: order.items.map(
       (item): KitchenReceiptItem => ({
         quantity: item.quantity,
-        title: item.product.title,
+        title: resolveItemTitle(item),
         unitPrice: item.priceAtTime,
       })
     ),

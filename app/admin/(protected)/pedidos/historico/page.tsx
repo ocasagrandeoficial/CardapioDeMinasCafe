@@ -64,6 +64,7 @@ export default async function HistoricoPedidosPage({
     items: order.items.map((item) => ({
       quantity: item.quantity,
       priceAtTime: item.priceAtTime,
+      productTitle: item.productTitle,
       product: { title: item.product.title },
     })),
   }));

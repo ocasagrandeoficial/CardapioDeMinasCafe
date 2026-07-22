@@ -84,7 +84,8 @@ export async function deleteCategory(id: string): Promise<CategoryActionState> {
   if (!id) return { error: "Categoria inválida." };
 
   try {
-    // onDelete: Cascade no schema remove os produtos associados.
+    // onDelete: SetNull — os produtos da categoria ficam sem categoria,
+    // sem apagar o histórico nem bloquear a exclusão.
     await prisma.category.delete({ where: { id } });
   } catch {
     return { error: "Não foi possível excluir a categoria." };

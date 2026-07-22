@@ -19,6 +19,7 @@ import { canPrintOnCashierPc } from "@/lib/print";
 import { toKitchenReceiptData, type KitchenReceiptData } from "@/lib/receipt";
 import { formatOrderId } from "@/lib/order-period";
 import { formatPhone, formatPrice } from "@/lib/format";
+import { resolveItemTitle } from "@/lib/receipt";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { KitchenReceipt } from "@/components/admin/kitchen-receipt";
@@ -383,7 +384,7 @@ export function PedidosBoard() {
                       <span className="font-bold text-coffee-700">
                         {item.quantity}x
                       </span>
-                      <span>{item.product.title}</span>
+                      <span>{resolveItemTitle(item)}</span>
                     </li>
                   ))}
                 </ul>
